@@ -4,16 +4,19 @@ import https from "https";
 import fs from "fs";
 import { Strategy } from "passport-bnet";
 import { MongoClient, Db } from "mongodb";
+import { config } from "dotenv";
+
+config();
 
 const app = express();
 const port = 3000;
 
-var client = new MongoClient('mongodb://localhost:27017', {useNewUrlParser: true});
+var client = new MongoClient(process.env.MONGO_URL, {useNewUrlParser: true});
 var db:Db = null;
 client.connect().then(() => {
     console.log("Connected successfully to mongodb server");
 
-    db = client.db("pug-bot")
+    db = client.db(process.env.MONGO_DB)
 });
 
 app.use(require('cookie-parser')());
@@ -36,10 +39,10 @@ passport.deserializeUser(function (user, done) {
 });
 
 passport.use(new Strategy({
-    clientID: "6925477f30d7439cbd2deb27e198a0ed",
-    clientSecret: "QPC1BlHUTvym5ifZ35olCaXOvybwmlsE",
-    callbackURL: "https://localhost:3000/auth/bnet/callback",
-    region: "us"
+    clientID: process.env.BNET_CLIENT_ID,
+    clientSecret: process.env.BNET_CLIENT_SECRET,
+    callbackURL: process.env.SERVER_URL+"/auth/bnet/callback",
+    region: process.env.BNET_REGION
 }, (accessToken, refreshToken, profile, done) => done(null, profile)));
 
 const httpsOptions = {
