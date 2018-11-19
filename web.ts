@@ -58,16 +58,45 @@ app.get('/', (req, res) => {
         res.send('Hello World!');
     }
 })
+app.get('/auth', (req, res) => {
+    var { discord_id, token, platform} = req.query;
+
+    if (!discord_id || !token || !platform) {
+        res.status(404);
+        return;
+    }
+
+    let users = db.collection('users');
+    users.findOne({ discord_id: discord_id}).then(doc => {
+        if(!doc || doc.token != token) {
+            res.status(404);
+            return;
+        }
+
+        req.session.discord_id = discord_id;
+
+        switch (platform) {
+            case "bnet":
+                res.redirect('/auth/bnet');
+                break;
+        
+            default:
+                res.status(404);
+                break;
+        }
+    });
+
+});
 app.get('/auth/bnet', passport.authenticate('bnet'));
 app.get('/auth/bnet/callback', passport.authenticate('bnet', {failureRedirect: '/'}), (req, res) => {
-    res.redirect('/battletag/save');
+    res.redirect('/bnet/save');
 });
 
-app.get('/battletag/save', (req, res) => {
+app.get('/bnet/save', (req, res) => {
     if (req.session.passport) {
-        const collection = db.collection("documents");
-        collection.insertOne({user: "ivan", battletag: req.session.passport.user.battletag});
-        res.send("Battletag saved");
+        const users = db.collection("users");
+        users.updateOne({ discord_id: req.session.discord_id }, { $set: { battletag: req.session.passport.user.battletag, platform: 'bnet', registered: true }});
+        res.send("Battletag registered");
     } else {
         res.send('Not authenticated');
     }

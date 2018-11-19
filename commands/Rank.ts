@@ -3,33 +3,46 @@ import { parse } from "node-html-parser";
 
 import Command from "../lib/Command";
 import { Message } from "discord.js";
+import { getDb } from "../lib/DbManager";
 
 class Rank extends Command {
     constructor() {super("rank")}
 
     execute(args: string[], message: Message): void {
+        let db = getDb();
+        let users = db.collection('users');
+        
+        users.findOne({discord_id: message.author.id}).then(doc => {
+            if(!doc || !doc.registered) {
+                message.reply("You are not registered yet, please run !register");
+                return;
+            }
+            
+            //TODO: support other platforms
+            var profileUrl = this.buildUrl(doc.battletag);
+            if(!profileUrl) {
+                message.reply("Usage: "+this.usage());
+                return;
+            }
+    
+            fetch(profileUrl)
+                .then(r => r.text())
+                .then(text => {
+                    var root = parse(text);
+                    var rankElement = root.querySelector('.competitive-rank');
+    
+                    if(!rankElement) {
+                        message.reply("Your profile is currently private, "+doc.battletag);
+                        return;
+                    }
+    
+                    var rank: string = rankElement.rawText;
+                    message.reply(`Your rank is ${rank}, ${doc.battletag}`);
+                })
+                .catch(e => message.reply(e.message));
+            
+        });
 
-        var profileUrl = this.buildUrl(args[0]);
-        if(!profileUrl) {
-            message.reply("Usage: "+this.usage());
-            return;
-        }
-
-        fetch(profileUrl)
-            .then(r => r.text())
-            .then(text => {
-                var root = parse(text);
-                var rankElement = root.querySelector('.competitive-rank');
-
-                if(!rankElement) {
-                    message.reply("Your profile is currently private");
-                    return;
-                }
-
-                var rank: string = rankElement.rawText;
-                message.reply(`Your rank is ${rank}`);
-            })
-            .catch(e => message.reply(e.message));
     }
 
     buildUrl(source: string): string {
