@@ -1,11 +1,11 @@
-import { registerCommand } from "../lib/CommandManager";
+import CommandManager from "../lib/CommandManager";
 
 import Rank from "./Rank";
 import Help from "./Help";
 import Register from "./Register";
 
-export function bootstrap(): void {
-    registerCommand(new Rank);
-    registerCommand(new Help);
-    registerCommand(new Register);
+export function bootstrap(manager: CommandManager): void {
+    manager.registerCommand(new Rank);
+    manager.registerCommand(new Help);
+    manager.registerCommand(new Register);
 }

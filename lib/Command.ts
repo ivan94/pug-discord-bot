@@ -1,6 +1,6 @@
 import { Message } from "discord.js";
 
-abstract class Command {
+export default abstract class Command {
     keyword: string;
     joingArgs: boolean;
     constructor(keyword: string, joingArgs: boolean = false) {
@@ -11,5 +11,3 @@ abstract class Command {
     abstract execute(args: string[], msg: Message): void;
     abstract usage(): string;
 }
-
-export default Command;

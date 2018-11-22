@@ -1,6 +1,6 @@
 import Command from "../lib/Command";
 import { Message } from "discord.js";
-import { commands } from "../lib/CommandManager";
+import { manager } from "../app";
 
 class Help extends Command {
     constructor() {super("help")}
@@ -14,7 +14,7 @@ class Help extends Command {
         if(args.length != 1) {
             command = this;
         } else {
-            command = commands[args[0]];
+            command = manager.commands[args[0]];
         }
 
         if(command) {
